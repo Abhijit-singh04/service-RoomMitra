@@ -1,0 +1,12 @@
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/bin/Release/net8.0/RoomMitra.Domain.deps.json
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/bin/Release/net8.0/RoomMitra.Domain.dll
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/bin/Release/net8.0/RoomMitra.Domain.pdb
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/obj/Release/net8.0/RoomMitra.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/obj/Release/net8.0/RoomMitra.Domain.AssemblyInfoInputs.cache
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/obj/Release/net8.0/RoomMitra.Domain.AssemblyInfo.cs
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/obj/Release/net8.0/RoomMitra.Domain.csproj.CoreCompileInputs.cache
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/obj/Release/net8.0/RoomMitra.Domain.sourcelink.json
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/obj/Release/net8.0/RoomMitra.Domain.dll
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/obj/Release/net8.0/refint/RoomMitra.Domain.dll
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/obj/Release/net8.0/RoomMitra.Domain.pdb
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Domain/obj/Release/net8.0/ref/RoomMitra.Domain.dll

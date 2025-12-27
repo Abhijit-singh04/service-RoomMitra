@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "d485tN0tcwsZko879kpMpPj2ORNiWM9wVDPKHWWeiXc=",
+  "Source": "RoomMitra.Api",
+  "BasePath": "_content/RoomMitra.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

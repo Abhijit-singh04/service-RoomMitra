@@ -1,0 +1,16 @@
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/RoomMitra.Application.csproj.AssemblyReference.cache
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/RoomMitra.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/RoomMitra.Application.AssemblyInfoInputs.cache
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/RoomMitra.Application.AssemblyInfo.cs
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/RoomMitra.Application.csproj.CoreCompileInputs.cache
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/RoomMitra.Application.sourcelink.json
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/bin/Release/net8.0/RoomMitra.Application.deps.json
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/bin/Release/net8.0/RoomMitra.Application.dll
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/bin/Release/net8.0/RoomMitra.Application.pdb
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/bin/Release/net8.0/RoomMitra.Domain.dll
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/bin/Release/net8.0/RoomMitra.Domain.pdb
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/RoomMitr.D581DB58.Up2Date
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/RoomMitra.Application.dll
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/refint/RoomMitra.Application.dll
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/RoomMitra.Application.pdb
+/Users/abhijitsingh/Projects/service-RoomMitra/src/RoomMitra.Application/obj/Release/net8.0/ref/RoomMitra.Application.dll
