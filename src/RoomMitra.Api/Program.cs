@@ -43,6 +43,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, HttpUserContext>();
 
+
+// add comment
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
