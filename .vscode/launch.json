@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "RoomMitra.Api (Debug)",
+      "type": "dotnet",
+      "request": "launch",
+      "preLaunchTask": "build (RoomMitra)",
+      "projectPath": "${workspaceFolder}/src/RoomMitra.Api/RoomMitra.Api.csproj",
+      "cwd": "${workspaceFolder}/src/RoomMitra.Api",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5055"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "stopAtEntry": false
+    }
+  ]
+}
