@@ -12,7 +12,15 @@ public sealed class RoomMitraDbContext : IdentityDbContext<AppUser, IdentityRole
     {
     }
 
+    // Legacy - will be migrated to Property
     public DbSet<FlatListing> FlatListings => Set<FlatListing>();
+
+    // New Schema Tables
+    public DbSet<Property> Properties => Set<Property>();
+    public DbSet<PropertyImage> PropertyImages => Set<PropertyImage>();
+    public DbSet<Amenity> Amenities => Set<Amenity>();
+    public DbSet<PropertyAmenity> PropertyAmenities => Set<PropertyAmenity>();
+    public DbSet<UserPreferences> UserPreferences => Set<UserPreferences>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
