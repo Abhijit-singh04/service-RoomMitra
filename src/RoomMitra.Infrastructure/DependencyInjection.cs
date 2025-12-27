@@ -20,8 +20,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // Configure options
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<AzureBlobOptions>(configuration.GetSection(AzureBlobOptions.SectionName));
+        services.Configure<AzureAdB2COptions>(configuration.GetSection(AzureAdB2COptions.SectionName));
 
         services.AddDbContext<RoomMitraDbContext>(options =>
         {
