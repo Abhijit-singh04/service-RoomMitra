@@ -99,6 +99,94 @@ public sealed class HealthController : ControllerBase
         return Ok(new { status = "ready", database = new { configured = true, canConnect = true } });
     }
 
+    [HttpGet("db")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> DatabaseHealth(CancellationToken cancellationToken)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var dbConnection = _configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
+        var dbConfigured = IsConfigured(dbConnection);
+
+        if (!dbConfigured)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                status = "unhealthy",
+                database = "PostgreSQL",
+                configured = false,
+                message = "Database connection string is not configured"
+            });
+        }
+
+        try
+        {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(TimeSpan.FromSeconds(10));
+
+            // Open connection explicitly to get detailed error
+            var connection = _db.Database.GetDbConnection();
+            await connection.OpenAsync(cts.Token);
+            stopwatch.Stop();
+
+            var serverVersion = connection.ServerVersion ?? "unknown";
+
+            return Ok(new
+            {
+                status = "healthy",
+                database = "PostgreSQL",
+                configured = true,
+                canConnect = true,
+                responseTimeMs = stopwatch.ElapsedMilliseconds,
+                serverVersion,
+                server = GetMaskedServer(dbConnection)
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            stopwatch.Stop();
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                status = "unhealthy",
+                database = "PostgreSQL",
+                configured = true,
+                canConnect = false,
+                responseTimeMs = stopwatch.ElapsedMilliseconds,
+                message = "Database connection timed out"
+            });
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                status = "unhealthy",
+                database = "PostgreSQL",
+                configured = true,
+                canConnect = false,
+                responseTimeMs = stopwatch.ElapsedMilliseconds,
+                message = ex.Message
+            });
+        }
+    }
+
+    private static string GetMaskedServer(string connectionString)
+    {
+        try
+        {
+            var parts = connectionString.Split(';')
+                .Select(p => p.Trim())
+                .Where(p => p.StartsWith("Host=", StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault();
+            
+            return parts?.Replace("Host=", "", StringComparison.OrdinalIgnoreCase) ?? "unknown";
+        }
+        catch
+        {
+            return "unknown";
+        }
+    }
+
     private static bool IsConfigured(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
