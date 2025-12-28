@@ -22,7 +22,7 @@ public sealed class UploadsController : ControllerBase
         public IFormFile File { get; init; } = default!;
     }
 
-    [Authorize]
+    [AllowAnonymous]
     [HttpPost("images")]
     [RequestSizeLimit(MaxImageBytes)]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]

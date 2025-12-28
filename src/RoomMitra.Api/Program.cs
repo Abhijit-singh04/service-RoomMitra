@@ -1,5 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RoomMitra.Application;
@@ -174,5 +176,34 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    try
+    {
+        var server = app.Services.GetRequiredService<IServer>();
+        var addressesFeature = server.Features.Get<IServerAddressesFeature>();
+        var urls = (addressesFeature?.Addresses?.Any() == true) ? addressesFeature!.Addresses : app.Urls;
+
+        if (urls is not null && urls.Any())
+        {
+            foreach (var url in urls)
+            {
+                app.Logger.LogInformation("Server is running at {Url}", url);
+                Console.WriteLine($"Server is running at {url}");
+            }
+        }
+        else
+        {
+            app.Logger.LogInformation("Server started. No URLs available from features.");
+            Console.WriteLine("Server started. No URLs available from features.");
+        }
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Server started, but failed to resolve bound URLs.");
+        Console.WriteLine($"Server started. Failed to resolve URLs: {ex.Message}");
+    }
+});
 
 app.Run();
