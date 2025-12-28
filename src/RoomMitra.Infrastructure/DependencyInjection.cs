@@ -27,7 +27,7 @@ public static class DependencyInjection
 
         services.AddDbContext<RoomMitraDbContext>(options =>
         {
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
         });
 
         services.AddIdentityCore<AppUser>(options =>
