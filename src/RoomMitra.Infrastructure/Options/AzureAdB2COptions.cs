@@ -30,6 +30,18 @@ public sealed class AzureAdB2COptions
     public string ClientId { get; init; } = string.Empty;
 
     /// <summary>
+    /// The client secret for confidential client authentication.
+    /// This should be stored in Azure Key Vault in production.
+    /// </summary>
+    public string ClientSecret { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The API scope for the backend API.
+    /// Format: https://{tenant}.onmicrosoft.com/{api-client-id}/access_as_user
+    /// </summary>
+    public string ApiScope { get; init; } = string.Empty;
+
+    /// <summary>
     /// The expected issuer URL for token validation.
     /// Format: https://{tenant}.b2clogin.com/{tenantId}/v2.0/
     /// If empty, it will be constructed from TenantName and TenantId.

@@ -149,8 +149,11 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:3000",
-                "https://localhost:3000"
+                "https://localhost:3000",
+                // Azure Static Web App domains (update with your actual domain)
+                "https://*.azurestaticapps.net"
             )
+            .SetIsOriginAllowedToAllowWildcardSubdomains()
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials() // Required for cookies

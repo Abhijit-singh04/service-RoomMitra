@@ -41,6 +41,13 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IAuthService, IdentityAuthService>();
+        services.AddScoped<IAzureAuthService, AzureB2CAuthService>();
+
+        // Register HttpClient for Azure B2C API calls
+        services.AddHttpClient("AzureB2C", client =>
+        {
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
 
         services.AddScoped<IFlatListingRepository, EfFlatListingRepository>();
         services.AddScoped<IBlobStorage, AzureBlobStorage>();
