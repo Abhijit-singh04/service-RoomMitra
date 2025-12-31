@@ -62,6 +62,7 @@ internal sealed class EfFlatListingRepository : IFlatListingRepository
         {
             ListingSort.RentAsc => q.OrderBy(x => x.Rent).ThenByDescending(x => x.CreatedAt),
             ListingSort.RentDesc => q.OrderByDescending(x => x.Rent).ThenByDescending(x => x.CreatedAt),
+            ListingSort.Oldest => q.OrderBy(x => x.CreatedAt),
             _ => q.OrderByDescending(x => x.CreatedAt)
         };
 
