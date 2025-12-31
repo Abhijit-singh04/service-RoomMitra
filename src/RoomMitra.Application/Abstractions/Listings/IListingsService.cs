@@ -7,6 +7,8 @@ public interface IListingsService
 {
     Task<PagedResult<FlatListingSummaryDto>> SearchAsync(ListingSearchQuery query, CancellationToken cancellationToken);
 
+    Task<PagedResult<FlatListingSummaryDto>> GetMyListingsAsync(int page, int pageSize, CancellationToken cancellationToken);
+
     Task<FlatListingDetailDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
     Task<Guid> CreateAsync(CreateListingRequest request, CancellationToken cancellationToken);

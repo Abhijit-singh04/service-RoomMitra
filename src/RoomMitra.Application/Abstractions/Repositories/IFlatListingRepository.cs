@@ -10,6 +10,8 @@ public interface IFlatListingRepository
 
     Task<PagedResult<FlatListing>> SearchAsync(ListingSearchQuery query, CancellationToken cancellationToken);
 
+    Task<PagedResult<FlatListing>> GetByUserIdAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken);
+
     Task AddAsync(FlatListing listing, CancellationToken cancellationToken);
 
     Task UpdateAsync(FlatListing listing, CancellationToken cancellationToken);
