@@ -34,3 +34,8 @@ TestResults/
 # Coverage
 coverage/
 coverage.*
+
+# Secrets / Environment files
+appsettings.Development.json
+appsettings.Local.json
+*.local.json
