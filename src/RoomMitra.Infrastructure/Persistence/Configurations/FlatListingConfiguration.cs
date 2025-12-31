@@ -48,14 +48,17 @@ internal sealed class FlatListingConfiguration : IEntityTypeConfiguration<FlatLi
         var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
 
         builder.Property(x => x.Amenities)
+            .HasColumnType("jsonb")
             .HasConversion(StringListJsonConverter(jsonOptions))
             .Metadata.SetValueComparer(StringListComparer());
 
         builder.Property(x => x.Preferences)
+            .HasColumnType("jsonb")
             .HasConversion(StringListJsonConverter(jsonOptions))
             .Metadata.SetValueComparer(StringListComparer());
 
         builder.Property(x => x.Images)
+            .HasColumnType("jsonb")
             .HasConversion(StringListJsonConverter(jsonOptions))
             .Metadata.SetValueComparer(StringListComparer());
 
