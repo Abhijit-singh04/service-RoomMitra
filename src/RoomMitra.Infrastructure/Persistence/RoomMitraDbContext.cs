@@ -21,6 +21,7 @@ public sealed class RoomMitraDbContext : IdentityDbContext<AppUser, IdentityRole
     public DbSet<Amenity> Amenities => Set<Amenity>();
     public DbSet<PropertyAmenity> PropertyAmenities => Set<PropertyAmenity>();
     public DbSet<UserPreferences> UserPreferences => Set<UserPreferences>();
+    public DbSet<OtpRequest> OtpRequests => Set<OtpRequest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

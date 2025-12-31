@@ -44,4 +44,34 @@ public sealed class AuthController : ControllerBase
             return Problem(title: "Login failed", detail: ex.Message, statusCode: StatusCodes.Status400BadRequest);
         }
     }
+
+    [HttpPost("request-otp")]
+    [ProducesResponseType(typeof(RequestOtpResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RequestOtp([FromBody] RequestOtpRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var response = await _authService.RequestOtpAsync(request, cancellationToken);
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Problem(title: "OTP request failed", detail: ex.Message, statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    [HttpPost("verify-otp")]
+    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var response = await _authService.VerifyOtpAsync(request, cancellationToken);
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Problem(title: "OTP verification failed", detail: ex.Message, statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
 }

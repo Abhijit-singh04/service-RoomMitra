@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RoomMitra.Application.Abstractions.Auth;
+using RoomMitra.Application.Abstractions.Notifications;
 using RoomMitra.Application.Abstractions.Repositories;
 using RoomMitra.Application.Abstractions.Storage;
 using RoomMitra.Application.Abstractions.Time;
 using RoomMitra.Infrastructure.Auth;
 using RoomMitra.Infrastructure.Identity;
+using RoomMitra.Infrastructure.Notifications;
 using RoomMitra.Infrastructure.Options;
 using RoomMitra.Infrastructure.Persistence;
 using RoomMitra.Infrastructure.Repositories;
@@ -24,6 +26,7 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<AzureBlobOptions>(configuration.GetSection(AzureBlobOptions.SectionName));
         services.Configure<AzureAdB2COptions>(configuration.GetSection(AzureAdB2COptions.SectionName));
+        services.Configure<OtpOptions>(configuration.GetSection(OtpOptions.SectionName));
 
         services.AddDbContext<RoomMitraDbContext>(options =>
         {
@@ -43,6 +46,8 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IAuthService, IdentityAuthService>();
+        services.AddScoped<IOtpRequestRepository, EfOtpRequestRepository>();
+        services.AddScoped<ISmsSender, ConsoleSmsSender>();
 
         services.AddScoped<IFlatListingRepository, EfFlatListingRepository>();
         services.AddScoped<IBlobStorage, AzureBlobStorage>();
