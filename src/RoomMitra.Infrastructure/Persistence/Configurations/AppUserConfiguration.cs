@@ -8,7 +8,7 @@ internal sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 {
     public void Configure(EntityTypeBuilder<AppUser> builder)
     {
-        builder.ToTable("Users");
+        builder.ToTable("AspNetUsers");
 
         builder.Property(u => u.Name)
             .HasMaxLength(200)

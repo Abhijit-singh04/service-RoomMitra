@@ -34,7 +34,12 @@ public sealed class HttpUserContext : IUserContext
         {
             if (!IsAuthenticated) return null;
 
-            // Try Object ID first (preferred for Azure AD B2C)
+            // Try standard NameIdentifier claim first (used by local JWT auth)
+            var nameIdentifier = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(nameIdentifier) && Guid.TryParse(nameIdentifier, out var nameIdGuid))
+                return nameIdGuid;
+
+            // Try Object ID (preferred for Azure AD B2C)
             var oid = ObjectId;
             if (!string.IsNullOrEmpty(oid) && Guid.TryParse(oid, out var oidGuid))
                 return oidGuid;

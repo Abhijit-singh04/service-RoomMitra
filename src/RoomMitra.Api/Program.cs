@@ -151,7 +151,9 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:3000",
-                "https://localhost:3000"
+                "https://localhost:3000",
+                "http://localhost:3001",  // Allow Swagger UI
+                "https://localhost:3001"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -165,13 +167,19 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    
+    // In development, allow all origins for easier testing
+    app.UseCors(policy => policy
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .AllowAnyMethod());
 }
 else
 {
     app.UseHttpsRedirection();
+    app.UseCors("frontend");
 }
 
-app.UseCors("frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
