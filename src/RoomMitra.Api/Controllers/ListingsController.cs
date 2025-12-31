@@ -45,7 +45,7 @@ public sealed class ListingsController : ControllerBase
         return listing is null ? NotFound() : Ok(listing);
     }
 
-    [AllowAnonymous]
+    [Authorize]
     [HttpPost]
     [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateListingRequest request, CancellationToken cancellationToken)

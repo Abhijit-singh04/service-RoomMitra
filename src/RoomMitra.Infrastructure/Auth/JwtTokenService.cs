@@ -24,7 +24,10 @@ internal sealed class JwtTokenService : ITokenService
             throw new InvalidOperationException("JWT signing key is not configured.");
         }
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey))
+        {
+            KeyId = string.Empty // Explicitly set empty KeyId to avoid kid in token header
+        };
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
@@ -36,6 +39,8 @@ internal sealed class JwtTokenService : ITokenService
             signingCredentials: credentials
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var handler = new JwtSecurityTokenHandler();
+        handler.SetDefaultTimesOnTokenCreation = false; // Don't add default timestamps
+        return handler.WriteToken(token);
     }
 }

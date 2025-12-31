@@ -28,6 +28,8 @@ public static class DependencyInjection
         services.AddDbContext<RoomMitraDbContext>(options =>
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+            options.EnableSensitiveDataLogging(); // Enable to see parameter values
+            options.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information);
         });
 
         services.AddIdentityCore<AppUser>(options =>
