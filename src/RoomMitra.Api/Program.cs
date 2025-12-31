@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -115,6 +117,15 @@ else
 {
     // Fallback to local JWT authentication (for development/testing)
     var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+    
+    Console.WriteLine($"Using Local JWT Authentication - Issuer: {jwt.Issuer}, Audience: {jwt.Audience}");
+    
+    var signingKeyBytes = Encoding.UTF8.GetBytes(jwt.SigningKey);
+    var signingKey = new SymmetricSecurityKey(signingKeyBytes)
+    {
+        KeyId = string.Empty // Match the empty KeyId from token generation
+    };
+    
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
@@ -125,10 +136,14 @@ else
                 ValidateAudience = true,
                 ValidAudience = jwt.Audience,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
+                IssuerSigningKey = signingKey,
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.FromMinutes(2)
+                ClockSkew = TimeSpan.FromMinutes(2),
+                TryAllIssuerSigningKeys = true // Try all available keys if kid doesn't match
             };
+            
+            // Configure events for debugging
+            options.Events = new JwtBearerEvents();
         });
 }
 
