@@ -4,5 +4,6 @@ public enum ListingSort
 {
     Newest = 1,
     RentAsc = 2,
-    RentDesc = 3
+    RentDesc = 3,
+    Oldest = 4
 }

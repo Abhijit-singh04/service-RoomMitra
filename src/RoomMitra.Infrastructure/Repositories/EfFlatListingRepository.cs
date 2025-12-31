@@ -62,8 +62,32 @@ internal sealed class EfFlatListingRepository : IFlatListingRepository
         {
             ListingSort.RentAsc => q.OrderBy(x => x.Rent).ThenByDescending(x => x.CreatedAt),
             ListingSort.RentDesc => q.OrderByDescending(x => x.Rent).ThenByDescending(x => x.CreatedAt),
+            ListingSort.Oldest => q.OrderBy(x => x.CreatedAt),
             _ => q.OrderByDescending(x => x.CreatedAt)
         };
+
+        var total = await q.LongCountAsync(cancellationToken);
+
+        var items = await q
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<FlatListing>(items, page, pageSize, total);
+    }
+
+    public async Task<PagedResult<FlatListing>> GetByUserIdAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        page = page <= 0 ? 1 : page;
+        pageSize = pageSize is < 1 or > 100 ? 12 : pageSize;
+
+        IQueryable<FlatListing> q = _db.FlatListings.AsNoTracking();
+
+        // Filter by user and exclude deleted listings
+        q = q.Where(x => x.PostedByUserId == userId && x.Status != ListingStatus.Deleted);
+
+        // Order by newest first
+        q = q.OrderByDescending(x => x.CreatedAt);
 
         var total = await q.LongCountAsync(cancellationToken);
 

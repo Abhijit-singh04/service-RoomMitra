@@ -44,12 +44,8 @@ internal sealed class AzureBlobStorage : IBlobStorage
             cancellationToken: cancellationToken
         );
 
-        if (!string.IsNullOrWhiteSpace(_options.PublicBaseUrl))
-        {
-            return $"{_options.PublicBaseUrl.TrimEnd('/')}/{_options.ContainerName}/{blobName}";
-        }
-
-        return blobClient.Uri.ToString();
+        // Return just the blob name (path) - images will be served through the API endpoint
+        return blobName;
     }
 
     public async Task<BlobFileResult?> GetAsync(string blobName, CancellationToken cancellationToken)
