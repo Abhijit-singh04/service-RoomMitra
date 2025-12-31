@@ -10,6 +10,8 @@ namespace RoomMitra.Api.Controllers;
 public sealed class UploadsController : ControllerBase
 {
     private const long MaxImageBytes = 5L * 1024 * 1024;
+    private const long MaxBatchBytes = 50L * 1024 * 1024; // 50MB for batch
+    private const int MaxImagesPerBatch = 10;
 
     private readonly IBlobStorage _blobStorage;
 
@@ -21,6 +23,11 @@ public sealed class UploadsController : ControllerBase
     public sealed class UploadImageRequest
     {
         public IFormFile File { get; init; } = default!;
+    }
+
+    public sealed class UploadImagesRequest
+    {
+        public List<IFormFile> Files { get; init; } = new();
     }
 
     /// <summary>
@@ -53,6 +60,86 @@ public sealed class UploadsController : ControllerBase
         var url = await _blobStorage.UploadAsync(stream, file.ContentType, file.FileName, cancellationToken);
 
         return Ok(new { url });
+    }
+
+    /// <summary>
+    /// Upload multiple images to Azure Blob Storage (for listing creation).
+    /// Returns blob names that can be stored in the listing and retrieved via the GET endpoint.
+    /// </summary>
+    [Authorize]
+    [HttpPost("images/batch")]
+    [RequestSizeLimit(MaxBatchBytes)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadImages(List<IFormFile> files, CancellationToken cancellationToken)
+    {
+        if (files == null || files.Count == 0)
+        {
+            return Problem(title: "Validation error", detail: "No files provided.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        if (files.Count > MaxImagesPerBatch)
+        {
+            return Problem(title: "Validation error", detail: $"Maximum {MaxImagesPerBatch} images per batch.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        var uploadedImages = new List<object>();
+        var errors = new List<string>();
+
+        for (int i = 0; i < files.Count; i++)
+        {
+            var file = files[i];
+            
+            if (file.Length <= 0)
+            {
+                errors.Add($"File {i + 1}: Empty file.");
+                continue;
+            }
+
+            if (file.Length > MaxImageBytes)
+            {
+                errors.Add($"File {i + 1} ({file.FileName}): Size exceeds 5MB limit.");
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(file.ContentType) || !file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add($"File {i + 1} ({file.FileName}): Not a valid image file.");
+                continue;
+            }
+
+            try
+            {
+                await using var stream = file.OpenReadStream();
+                var blobName = await _blobStorage.UploadAsync(stream, file.ContentType, file.FileName, cancellationToken);
+                
+                uploadedImages.Add(new
+                {
+                    originalName = file.FileName,
+                    blobName = blobName,
+                    size = file.Length,
+                    contentType = file.ContentType
+                });
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"File {i + 1} ({file.FileName}): Upload failed - {ex.Message}");
+            }
+        }
+
+        if (uploadedImages.Count == 0 && errors.Count > 0)
+        {
+            return Problem(title: "Upload failed", detail: string.Join("; ", errors), statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        return Ok(new
+        {
+            uploaded = uploadedImages,
+            errors = errors.Count > 0 ? errors : null,
+            message = errors.Count > 0 
+                ? $"Uploaded {uploadedImages.Count} of {files.Count} images."
+                : $"Successfully uploaded {uploadedImages.Count} images."
+        });
     }
 
     /// <summary>

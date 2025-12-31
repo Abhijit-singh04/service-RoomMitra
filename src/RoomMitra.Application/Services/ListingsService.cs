@@ -42,6 +42,32 @@ public sealed class ListingsService : IListingsService
         return new PagedResult<FlatListingSummaryDto>(dtos, result.Page, result.PageSize, result.TotalCount);
     }
 
+    public async Task<PagedResult<FlatListingSummaryDto>> GetMyListingsAsync(int page, int pageSize, CancellationToken cancellationToken)
+    {
+        var userId = _userContext.UserId;
+        if (userId is null)
+        {
+            return new PagedResult<FlatListingSummaryDto>(new List<FlatListingSummaryDto>(), page, pageSize, 0);
+        }
+
+        var result = await _repository.GetByUserIdAsync(userId.Value, page, pageSize, cancellationToken);
+
+        var dtos = result.Items
+            .Select(x => new FlatListingSummaryDto(
+                x.Id,
+                x.Title,
+                x.City,
+                x.Locality,
+                x.FlatType,
+                x.Rent,
+                x.Images.Count > 0 ? x.Images[0] : null,
+                x.CreatedAt
+            ))
+            .ToList();
+
+        return new PagedResult<FlatListingSummaryDto>(dtos, result.Page, result.PageSize, result.TotalCount);
+    }
+
     public async Task<FlatListingDetailDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var listing = await _repository.GetByIdAsync(id, cancellationToken);
