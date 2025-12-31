@@ -14,6 +14,29 @@ using RoomMitra.Api.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load environment variables from .env file in development
+if (builder.Environment.IsDevelopment())
+{
+    var envPath = Path.Combine(builder.Environment.ContentRootPath, ".env");
+    if (File.Exists(envPath))
+    {
+        foreach (var line in File.ReadAllLines(envPath))
+        {
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
+                continue;
+
+            var parts = line.Split('=', 2);
+            if (parts.Length == 2)
+            {
+                Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+            }
+        }
+    }
+}
+
+// Add environment variables to configuration
+builder.Configuration.AddEnvironmentVariables();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 

@@ -46,6 +46,18 @@ public sealed class ListingsController : ControllerBase
     }
 
     [Authorize]
+    [HttpGet("my")]
+    [ProducesResponseType(typeof(PagedResult<FlatListingSummaryDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyListings(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 12,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _listings.GetMyListingsAsync(page, pageSize, cancellationToken);
+        return Ok(result);
+    }
+
+    [Authorize]
     [HttpPost]
     [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateListingRequest request, CancellationToken cancellationToken)
