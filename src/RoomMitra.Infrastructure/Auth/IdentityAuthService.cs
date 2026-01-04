@@ -58,7 +58,9 @@ internal sealed class IdentityAuthService : IAuthService
             Id = Guid.NewGuid(),
             Name = request.Name.Trim(),
             Email = request.Email.Trim().ToLowerInvariant(),
-            UserName = request.Email.Trim().ToLowerInvariant()
+            UserName = request.Email.Trim().ToLowerInvariant(),
+            AuthProvider = "email",
+            IsProfileComplete = true
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);
@@ -72,7 +74,8 @@ internal sealed class IdentityAuthService : IAuthService
 
         return new AuthResponse(
             token,
-            new AuthUserDto(user.Id, user.Name, user.Email!, user.ProfileImageUrl)
+            MapToUserDto(user),
+            IsNewUser: true
         );
     }
 
@@ -94,7 +97,7 @@ internal sealed class IdentityAuthService : IAuthService
 
         return new AuthResponse(
             token,
-            new AuthUserDto(user.Id, user.Name, user.Email!, user.ProfileImageUrl)
+            MapToUserDto(user)
         );
     }
 
@@ -183,41 +186,61 @@ internal sealed class IdentityAuthService : IAuthService
         await _otpRepository.UpdateAsync(otpRequest, cancellationToken);
 
         var user = await _userManager.Users
-            .Where(u => u.PhoneNumber == phone)
+            .Where(u => u.PhoneNumber == phone && u.PhoneNumberConfirmed)
             .SingleOrDefaultAsync(cancellationToken);
+
+        bool isNewUser = false;
 
         if (user is null)
         {
-            user = new AppUser
-            {
-                Id = Guid.NewGuid(),
-                Name = $"User {MaskPhone(phone)}",
-                PhoneNumber = phone,
-                PhoneNumberConfirmed = true,
-                Email = CreateSyntheticEmail(phone),
-                UserName = phone,
-                EmailConfirmed = false,
-                IsVerified = true
-            };
+            // Check if there's an unverified user with this phone
+            var unverifiedUser = await _userManager.Users
+                .Where(u => u.PhoneNumber == phone && !u.PhoneNumberConfirmed)
+                .SingleOrDefaultAsync(cancellationToken);
 
-            var createResult = await _userManager.CreateAsync(user);
-            if (!createResult.Succeeded)
+            if (unverifiedUser is not null)
             {
-                var msg = string.Join("; ", createResult.Errors.Select(e => e.Description));
-                throw new InvalidOperationException(msg);
+                // Update existing unverified user
+                unverifiedUser.PhoneNumberConfirmed = true;
+                unverifiedUser.IsVerified = true;
+                unverifiedUser.UpdatedAt = _clock.UtcNow;
+                await _userManager.UpdateAsync(unverifiedUser);
+                user = unverifiedUser;
             }
-        }
-        else if (!user.PhoneNumberConfirmed)
-        {
-            user.PhoneNumberConfirmed = true;
-            await _userManager.UpdateAsync(user);
+            else
+            {
+                // Create new user
+                isNewUser = true;
+                user = new AppUser
+                {
+                    Id = Guid.NewGuid(),
+                    Name = string.Empty, // Will be set during profile completion
+                    PhoneNumber = phone,
+                    PhoneNumberConfirmed = true,
+                    Email = null, // Will be set during profile completion (optional)
+                    UserName = phone,
+                    EmailConfirmed = false,
+                    IsVerified = true,
+                    AuthProvider = "phone",
+                    IsProfileComplete = false
+                };
+
+                var createResult = await _userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                {
+                    var msg = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                    throw new InvalidOperationException(msg);
+                }
+            }
         }
 
         var token = CreateToken(user);
 
         return new AuthResponse(
             token,
-            new AuthUserDto(user.Id, user.Name, user.Email ?? string.Empty, user.ProfileImageUrl)
+            MapToUserDto(user),
+            IsNewUser: isNewUser,
+            RequiresProfileCompletion: !user.IsProfileComplete
         );
     }
 
@@ -231,6 +254,151 @@ internal sealed class IdentityAuthService : IAuthService
         };
 
         return _tokenService.CreateAccessToken(claims);
+    }
+
+    public async Task<AuthResponse> CompleteProfileAsync(Guid userId, CompleteProfileRequest request, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            throw new InvalidOperationException("User not found.");
+        }
+
+        user.Name = request.Name.Trim();
+        user.Occupation = request.Occupation?.Trim();
+        user.Bio = request.Bio?.Trim();
+        user.IsProfileComplete = true;
+        user.UpdatedAt = _clock.UtcNow;
+
+        // Set email if provided and not already set
+        if (!string.IsNullOrWhiteSpace(request.Email) && string.IsNullOrWhiteSpace(user.Email))
+        {
+            var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+            
+            // Check if email is already used by another user
+            var existingEmailUser = await _userManager.FindByEmailAsync(normalizedEmail);
+            if (existingEmailUser is not null && existingEmailUser.Id != userId)
+            {
+                throw new InvalidOperationException("This email is already registered to another account.");
+            }
+
+            user.Email = normalizedEmail;
+            user.NormalizedEmail = normalizedEmail.ToUpperInvariant();
+            user.EmailConfirmed = false; // Email not verified yet
+        }
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            var msg = string.Join("; ", result.Errors.Select(e => e.Description));
+            throw new InvalidOperationException(msg);
+        }
+
+        var token = CreateToken(user);
+
+        return new AuthResponse(
+            token,
+            MapToUserDto(user)
+        );
+    }
+
+    public async Task<AuthResponse> SyncExternalUserAsync(ExternalUserInfo externalUser, CancellationToken cancellationToken)
+    {
+        // First try to find by external ID
+        var user = await _userManager.Users
+            .Where(u => u.ExternalId == externalUser.ObjectId)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        bool isNewUser = false;
+
+        if (user is null && !string.IsNullOrWhiteSpace(externalUser.Email))
+        {
+            // Try to find by email (for account linking)
+            user = await _userManager.FindByEmailAsync(externalUser.Email.ToLowerInvariant());
+            
+            if (user is not null)
+            {
+                // Link external ID to existing account
+                user.ExternalId = externalUser.ObjectId;
+                user.AuthProvider = externalUser.IdentityProvider;
+                user.UpdatedAt = _clock.UtcNow;
+                await _userManager.UpdateAsync(user);
+            }
+        }
+
+        if (user is null)
+        {
+            // Create new user from external provider
+            isNewUser = true;
+            user = new AppUser
+            {
+                Id = Guid.NewGuid(),
+                ExternalId = externalUser.ObjectId,
+                Name = externalUser.Name ?? "User",
+                Email = externalUser.Email?.Trim().ToLowerInvariant(),
+                NormalizedEmail = externalUser.Email?.Trim().ToUpperInvariant(),
+                UserName = externalUser.Email?.Trim().ToLowerInvariant() ?? externalUser.ObjectId,
+                EmailConfirmed = true, // Email from OAuth is considered verified
+                ProfileImageUrl = externalUser.ProfileImageUrl,
+                AuthProvider = externalUser.IdentityProvider,
+                IsProfileComplete = !string.IsNullOrWhiteSpace(externalUser.Name),
+                PhoneNumberConfirmed = false,
+                IsVerified = false // Phone not verified yet
+            };
+
+            var createResult = await _userManager.CreateAsync(user);
+            if (!createResult.Succeeded)
+            {
+                var msg = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                throw new InvalidOperationException(msg);
+            }
+        }
+        else
+        {
+            // Update existing user with latest info from provider
+            bool updated = false;
+
+            if (!string.IsNullOrWhiteSpace(externalUser.Name) && user.Name != externalUser.Name)
+            {
+                user.Name = externalUser.Name;
+                updated = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(externalUser.ProfileImageUrl) && user.ProfileImageUrl != externalUser.ProfileImageUrl)
+            {
+                user.ProfileImageUrl = externalUser.ProfileImageUrl;
+                updated = true;
+            }
+
+            if (updated)
+            {
+                user.UpdatedAt = _clock.UtcNow;
+                await _userManager.UpdateAsync(user);
+            }
+        }
+
+        var token = CreateToken(user);
+
+        return new AuthResponse(
+            token,
+            MapToUserDto(user),
+            IsNewUser: isNewUser
+        );
+    }
+
+    private static AuthUserDto MapToUserDto(AppUser user)
+    {
+        return new AuthUserDto(
+            user.Id,
+            user.Name,
+            user.Email ?? string.Empty,
+            user.ProfileImageUrl,
+            user.PhoneNumber,
+            user.PhoneNumberConfirmed,
+            user.IsVerified,
+            user.IsProfileComplete,
+            user.AuthProvider
+        );
     }
 
     private static string NormalizePhone(string phone)

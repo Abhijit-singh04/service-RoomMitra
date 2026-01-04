@@ -13,4 +13,19 @@ public sealed class AppUser : IdentityUser<Guid>
     public bool IsVerified { get; set; } = false;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? UpdatedAt { get; set; }
+    
+    /// <summary>
+    /// The authentication provider used for sign-up: "google", "phone", or "email"
+    /// </summary>
+    public string AuthProvider { get; set; } = "email";
+    
+    /// <summary>
+    /// External identity provider ID (e.g., Azure AD oid for Google users)
+    /// </summary>
+    public string? ExternalId { get; set; }
+    
+    /// <summary>
+    /// Whether the user has completed their profile (name is set)
+    /// </summary>
+    public bool IsProfileComplete { get; set; } = false;
 }
