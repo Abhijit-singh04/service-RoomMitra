@@ -22,6 +22,12 @@ public interface IAuthService
     /// Creates user if not exists, updates if exists.
     /// </summary>
     Task<AuthResponse> SyncExternalUserAsync(ExternalUserInfo externalUser, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Validate a JWT token and return user info if valid.
+    /// Used for cookie-based session restoration.
+    /// </summary>
+    Task<UserInfoResponse?> ValidateTokenAndGetUserAsync(string token, CancellationToken cancellationToken);
 }
 
 /// <summary>

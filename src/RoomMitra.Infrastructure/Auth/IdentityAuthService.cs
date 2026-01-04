@@ -378,7 +378,6 @@ internal sealed class IdentityAuthService : IAuthService
         }
 
         var token = CreateToken(user);
-
         return new AuthResponse(
             token,
             MapToUserDto(user),
@@ -455,5 +454,54 @@ internal sealed class IdentityAuthService : IAuthService
 
         var suffix = phone[^4..];
         return new string('*', Math.Max(0, phone.Length - 4)) + suffix;
+    }
+    
+    /// <summary>
+    /// Validate a JWT token and return user info if valid.
+    /// Used for cookie-based session restoration.
+    /// </summary>
+    public async Task<UserInfoResponse?> ValidateTokenAndGetUserAsync(string token, CancellationToken cancellationToken)
+    {
+        // Validate the token
+        var principal = _tokenService.ValidateToken(token);
+        if (principal == null)
+        {
+            return null;
+        }
+        
+        // Extract user ID from claims
+        var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return null;
+        }
+        
+        // Fetch user from database to ensure they still exist and get fresh data
+        var user = await _userManager.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        
+        if (user == null)
+        {
+            return null;
+        }
+        
+        // Determine auth provider
+        var authProvider = string.IsNullOrWhiteSpace(user.AuthProvider) ? "email" : user.AuthProvider;
+        
+        // Return user info
+        return new UserInfoResponse(
+            UserId: user.Id,
+            Name: string.IsNullOrWhiteSpace(user.Name) ? (user.UserName ?? "User") : user.Name,
+            Email: user.Email ?? "",
+            ProfileImageUrl: user.ProfileImageUrl,
+            PhoneNumber: user.PhoneNumber,
+            PhoneVerified: user.PhoneNumberConfirmed,
+            IsVerified: user.IsVerified,
+            IsProfileComplete: user.IsProfileComplete,
+            AuthProvider: authProvider,
+            IsNewUser: false,
+            RequiresProfileCompletion: !user.IsProfileComplete
+        );
     }
 }
