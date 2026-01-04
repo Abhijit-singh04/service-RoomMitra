@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.Configure<AzureBlobOptions>(configuration.GetSection(AzureBlobOptions.SectionName));
         services.Configure<AzureAdB2COptions>(configuration.GetSection(AzureAdB2COptions.SectionName));
         services.Configure<OtpOptions>(configuration.GetSection(OtpOptions.SectionName));
+        services.Configure<FirebaseOptions>(configuration.GetSection(FirebaseOptions.SectionName));
 
         services.AddDbContext<RoomMitraDbContext>(options =>
         {
@@ -48,6 +49,10 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, IdentityAuthService>();
         services.AddScoped<IOtpRequestRepository, EfOtpRequestRepository>();
         services.AddScoped<ISmsSender, ConsoleSmsSender>();
+
+        // Firebase Phone Auth (independent from Google/Gmail/Azure AD flows)
+        services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
+        services.AddScoped<IFirebasePhoneAuthService, FirebasePhoneAuthService>();
 
         services.AddScoped<IFlatListingRepository, EfFlatListingRepository>();
         services.AddScoped<IBlobStorage, AzureBlobStorage>();

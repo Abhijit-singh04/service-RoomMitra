@@ -27,6 +27,11 @@ public interface IUserContext
     string? Email { get; }
 
     /// <summary>
+    /// The user's phone number.
+    /// </summary>
+    string? PhoneNumber { get; }
+
+    /// <summary>
     /// The user's display name.
     /// </summary>
     string? Name { get; }
