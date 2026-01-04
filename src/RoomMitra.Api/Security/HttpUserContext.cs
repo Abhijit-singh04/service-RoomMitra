@@ -97,6 +97,10 @@ public sealed class HttpUserContext : IUserContext
     public string? IdentityProvider => User?.FindFirstValue(IdentityProviderClaimType)
                                      ?? User?.FindFirstValue("idp");
 
+    public string? PhoneNumber => User?.FindFirstValue("phone")
+                                ?? User?.FindFirstValue(ClaimTypes.MobilePhone)
+                                ?? User?.FindFirstValue("phone_number");
+
     public IReadOnlyList<string> Roles
     {
         get
