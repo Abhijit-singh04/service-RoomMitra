@@ -12,7 +12,7 @@ internal sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 
         builder.Property(u => u.Name)
             .HasMaxLength(200)
-            .IsRequired();
+            .IsRequired(false); // Name can be empty for new phone users until profile completion
 
         builder.Property(u => u.ProfileImageUrl)
             .HasMaxLength(500);
@@ -35,9 +35,24 @@ internal sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 
         builder.Property(u => u.UpdatedAt);
 
+        // New fields for auth flow
+        builder.Property(u => u.AuthProvider)
+            .HasMaxLength(50)
+            .IsRequired()
+            .HasDefaultValue("email");
+
+        builder.Property(u => u.ExternalId)
+            .HasMaxLength(255);
+
+        builder.Property(u => u.IsProfileComplete)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         // Indexes for common queries
-        builder.HasIndex(u => u.Email).IsUnique();
+        builder.HasIndex(u => u.Email).IsUnique().HasFilter("\"Email\" IS NOT NULL");
         builder.HasIndex(u => u.PhoneNumber);
         builder.HasIndex(u => u.IsVerified);
+        builder.HasIndex(u => u.ExternalId).IsUnique().HasFilter("\"ExternalId\" IS NOT NULL");
+        builder.HasIndex(u => u.AuthProvider);
     }
 }
