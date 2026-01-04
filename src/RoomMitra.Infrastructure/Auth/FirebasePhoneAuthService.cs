@@ -129,7 +129,16 @@ internal sealed class FirebasePhoneAuthService : IFirebasePhoneAuthService
 
         return new AuthResponse(
             token,
-            new AuthUserDto(user.Id, user.Name, user.Email ?? string.Empty, user.ProfileImageUrl)
+            new AuthUserDto(
+                user.Id,
+                user.Name,
+                user.Email ?? string.Empty,
+                user.ProfileImageUrl,
+                user.PhoneNumber,
+                user.PhoneNumberConfirmed,
+                user.EmailConfirmed,
+                !string.IsNullOrEmpty(user.Name),
+                "firebase_phone")
         );
     }
 
@@ -172,7 +181,16 @@ internal sealed class FirebasePhoneAuthService : IFirebasePhoneAuthService
 
         return new AuthResponse(
             token,
-            new AuthUserDto(user.Id, user.Name, user.Email ?? string.Empty, user.ProfileImageUrl)
+            new AuthUserDto(
+                user.Id,
+                user.Name,
+                user.Email ?? string.Empty,
+                user.ProfileImageUrl,
+                user.PhoneNumber,
+                user.PhoneNumberConfirmed,
+                user.EmailConfirmed,
+                !string.IsNullOrEmpty(user.Name),
+                "firebase_phone")
         );
     }
 
@@ -228,7 +246,16 @@ internal sealed class FirebasePhoneAuthService : IFirebasePhoneAuthService
 
         return new AuthResponse(
             token,
-            new AuthUserDto(user.Id, user.Name, user.Email ?? string.Empty, user.ProfileImageUrl)
+            new AuthUserDto(
+                user.Id,
+                user.Name,
+                user.Email ?? string.Empty,
+                user.ProfileImageUrl,
+                user.PhoneNumber,
+                user.PhoneNumberConfirmed,
+                user.EmailConfirmed,
+                !string.IsNullOrEmpty(user.Name),
+                "firebase_phone")
         );
     }
 
