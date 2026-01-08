@@ -27,7 +27,22 @@ public sealed class FlatListing : AuditableEntity
 
     public List<string> Images { get; set; } = new();
 
+    /// <summary>
+    /// Latitude for geo-search. Only lat/lon stored, no full address.
+    /// </summary>
+    public double? Latitude { get; set; }
+    
+    /// <summary>
+    /// Longitude for geo-search. Only lat/lon stored, no full address.
+    /// </summary>
+    public double? Longitude { get; set; }
+
     public Guid PostedByUserId { get; set; }
+    
+    /// <summary>
+    /// Navigation property for nearby essentials (cached POI data)
+    /// </summary>
+    public List<NearbyEssential> NearbyEssentials { get; set; } = new();
 
     public ListingStatus Status { get; set; } = ListingStatus.Active;
 }

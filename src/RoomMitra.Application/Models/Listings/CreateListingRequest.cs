@@ -15,5 +15,7 @@ public sealed record CreateListingRequest(
     List<string> Amenities,
     List<string> Preferences,
     DateOnly? AvailableFrom,
-    List<string> Images
+    List<string> Images,
+    double? Latitude = null,
+    double? Longitude = null
 );

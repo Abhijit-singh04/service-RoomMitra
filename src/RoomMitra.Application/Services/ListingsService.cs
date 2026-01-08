@@ -93,7 +93,9 @@ public sealed class ListingsService : IListingsService
             listing.Images,
             listing.PostedByUserId,
             listing.Status,
-            listing.CreatedAt
+            listing.CreatedAt,
+            listing.Latitude,
+            listing.Longitude
         );
     }
 
@@ -117,6 +119,8 @@ public sealed class ListingsService : IListingsService
             Preferences = request.Preferences ?? new(),
             AvailableFrom = request.AvailableFrom,
             Images = request.Images ?? new(),
+            Latitude = request.Latitude,
+            Longitude = request.Longitude,
             PostedByUserId = userId,
             Status = ListingStatus.Active,
             CreatedAt = _clock.UtcNow
