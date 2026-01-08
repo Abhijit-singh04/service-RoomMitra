@@ -205,18 +205,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    
-    // In development, allow all origins for easier testing
-    app.UseCors(policy => policy
-        .AllowAnyOrigin()
-        .AllowAnyHeader()
-        .AllowAnyMethod());
 }
 else
 {
     app.UseHttpsRedirection();
-    app.UseCors("frontend");
 }
+
+// Apply CORS policy
+app.UseCors("frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
