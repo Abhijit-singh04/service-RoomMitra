@@ -285,18 +285,16 @@ var app = builder.Build();
 
 app.UseForwardedHeaders();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+// Enable Swagger in all environments for API documentation
+app.UseSwagger();
+app.UseSwaggerUI();
 
-    app.UseCors("frontend");
-}
-else
+if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
-    app.UseCors("frontend");
 }
+
+app.UseCors("frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
