@@ -101,6 +101,12 @@ public sealed class ChatService : IChatService
 
         var (propertyOwnerId, propertyTitle) = propertyInfo.Value;
 
+        // Prevent user from messaging themselves
+        if (propertyOwnerId == userId)
+        {
+            throw new InvalidOperationException("You cannot start a conversation with yourself for your own property.");
+        }
+
         // Current user is the interested user
         var conversation = await _conversationRepository.GetOrCreateAsync(
             propertyId,

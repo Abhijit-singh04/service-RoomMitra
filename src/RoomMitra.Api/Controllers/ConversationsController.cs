@@ -99,9 +99,14 @@ public sealed class ConversationsController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Creating/getting conversation for property {PropertyId}", request.PropertyId);
+            
             var conversation = await _chatService.GetOrCreateConversationAsync(
                 request.PropertyId,
                 cancellationToken);
+
+            _logger.LogInformation("Successfully created/retrieved conversation {ConversationId} for property {PropertyId}", 
+                conversation.Id, request.PropertyId);
 
             // Return 200 if existing, 201 if created
             // For simplicity, always return 200 (client doesn't need to distinguish)
@@ -115,7 +120,7 @@ public sealed class ConversationsController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Property {PropertyId} not found", request.PropertyId);
+            _logger.LogWarning(ex, "Property {PropertyId} not found or invalid operation", request.PropertyId);
             return NotFound(new { error = ex.Message });
         }
         catch (Exception ex)
