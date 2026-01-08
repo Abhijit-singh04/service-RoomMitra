@@ -13,13 +13,13 @@ internal sealed class ConversationConfiguration : IEntityTypeConfiguration<Conve
         builder.HasKey(c => c.Id);
 
         // Foreign Keys
-        builder.Property(c => c.PropertyOwnerId)
+        builder.Property(c => c.FlatListingOwnerId)
             .IsRequired();
 
         builder.Property(c => c.InterestedUserId)
             .IsRequired();
 
-        builder.Property(c => c.PropertyId)
+        builder.Property(c => c.FlatListingId)
             .IsRequired();
 
         // Last Message Info
@@ -35,9 +35,9 @@ internal sealed class ConversationConfiguration : IEntityTypeConfiguration<Conve
         builder.Property(c => c.UpdatedAt);
 
         // Relationships
-        builder.HasOne(c => c.Property)
+        builder.HasOne(c => c.FlatListing)
             .WithMany()
-            .HasForeignKey(c => c.PropertyId)
+            .HasForeignKey(c => c.FlatListingId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(c => c.Messages)
@@ -45,20 +45,20 @@ internal sealed class ConversationConfiguration : IEntityTypeConfiguration<Conve
             .HasForeignKey(m => m.ConversationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Unique constraint: one conversation per (PropertyOwnerId, InterestedUserId, PropertyId) tuple
-        builder.HasIndex(c => new { c.PropertyOwnerId, c.InterestedUserId, c.PropertyId })
+        // Unique constraint: one conversation per (FlatListingOwnerId, InterestedUserId, FlatListingId) tuple
+        builder.HasIndex(c => new { c.FlatListingOwnerId, c.InterestedUserId, c.FlatListingId })
             .IsUnique()
-            .HasDatabaseName("IX_Conversations_Unique_Participants_Property");
+            .HasDatabaseName("IX_Conversations_Unique_Participants_FlatListing");
 
         // Indexes for querying conversations by user
-        builder.HasIndex(c => c.PropertyOwnerId)
-            .HasDatabaseName("IX_Conversations_PropertyOwnerId");
+        builder.HasIndex(c => c.FlatListingOwnerId)
+            .HasDatabaseName("IX_Conversations_FlatListingOwnerId");
 
         builder.HasIndex(c => c.InterestedUserId)
             .HasDatabaseName("IX_Conversations_InterestedUserId");
 
-        builder.HasIndex(c => c.PropertyId)
-            .HasDatabaseName("IX_Conversations_PropertyId");
+        builder.HasIndex(c => c.FlatListingId)
+            .HasDatabaseName("IX_Conversations_FlatListingId");
 
         builder.HasIndex(c => c.LastMessageAt)
             .HasDatabaseName("IX_Conversations_LastMessageAt");

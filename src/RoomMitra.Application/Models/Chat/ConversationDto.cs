@@ -5,8 +5,8 @@ namespace RoomMitra.Application.Models.Chat;
 /// </summary>
 public sealed record ConversationDto(
     Guid Id,
-    Guid PropertyId,
-    string PropertyTitle,
+    Guid FlatListingId,
+    string FlatListingTitle,
     Guid OtherUserId,
     string OtherUserName,
     string? LastMessageContent,

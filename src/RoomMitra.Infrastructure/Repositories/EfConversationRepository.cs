@@ -17,23 +17,23 @@ internal sealed class EfConversationRepository : IConversationRepository
     public Task<Conversation?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         return _db.Conversations
-            .Include(c => c.Property)
+            .Include(c => c.FlatListing)
             .Include(c => c.Messages)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 
     public async Task<Conversation> GetOrCreateAsync(
-        Guid propertyId,
-        Guid propertyOwnerId,
+        Guid flatListingId,
+        Guid flatListingOwnerId,
         Guid interestedUserId,
         CancellationToken cancellationToken)
     {
         // Try to find existing conversation
         var existing = await _db.Conversations
-            .Include(c => c.Property)
+            .Include(c => c.FlatListing)
             .FirstOrDefaultAsync(
-                c => c.PropertyId == propertyId
-                     && c.PropertyOwnerId == propertyOwnerId
+                c => c.FlatListingId == flatListingId
+                     && c.FlatListingOwnerId == flatListingOwnerId
                      && c.InterestedUserId == interestedUserId,
                 cancellationToken);
 
@@ -45,17 +45,17 @@ internal sealed class EfConversationRepository : IConversationRepository
         // Create new conversation
         var conversation = new Conversation
         {
-            PropertyId = propertyId,
-            PropertyOwnerId = propertyOwnerId,
+            FlatListingId = flatListingId,
+            FlatListingOwnerId = flatListingOwnerId,
             InterestedUserId = interestedUserId
         };
 
         _db.Conversations.Add(conversation);
         await _db.SaveChangesAsync(cancellationToken);
 
-        // Reload with property
+        // Reload with flat listing
         return await _db.Conversations
-            .Include(c => c.Property)
+            .Include(c => c.FlatListing)
             .FirstAsync(c => c.Id == conversation.Id, cancellationToken);
     }
 
@@ -64,9 +64,9 @@ internal sealed class EfConversationRepository : IConversationRepository
         CancellationToken cancellationToken)
     {
         return await _db.Conversations
-            .Include(c => c.Property)
+            .Include(c => c.FlatListing)
             .Include(c => c.Messages.OrderByDescending(m => m.CreatedAt).Take(1))
-            .Where(c => c.PropertyOwnerId == userId || c.InterestedUserId == userId)
+            .Where(c => c.FlatListingOwnerId == userId || c.InterestedUserId == userId)
             .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -160,15 +160,15 @@ internal sealed class EfConversationRepository : IConversationRepository
             .CountAsync(cancellationToken);
     }
 
-    public async Task<(Guid OwnerId, string Title)?> GetPropertyInfoAsync(
-        Guid propertyId,
+    public async Task<(Guid OwnerId, string Title)?> GetFlatListingInfoAsync(
+        Guid flatListingId,
         CancellationToken cancellationToken)
     {
-        var property = await _db.Properties
-            .Where(p => p.Id == propertyId)
-            .Select(p => new { p.UserId, p.Title })
+        var flatListing = await _db.FlatListings
+            .Where(f => f.Id == flatListingId)
+            .Select(f => new { f.PostedByUserId, f.Title })
             .FirstOrDefaultAsync(cancellationToken);
 
-        return property != null ? (property.UserId, property.Title) : null;
+        return flatListing != null ? (flatListing.PostedByUserId, flatListing.Title) : null;
     }
 }

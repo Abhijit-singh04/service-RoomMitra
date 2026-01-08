@@ -29,8 +29,8 @@ public sealed class ChatService : IChatService
         foreach (var conversation in conversations)
         {
             // Determine who the "other" user is
-            var isOwner = conversation.PropertyOwnerId == userId;
-            var otherUserId = isOwner ? conversation.InterestedUserId : conversation.PropertyOwnerId;
+            var isOwner = conversation.FlatListingOwnerId == userId;
+            var otherUserId = isOwner ? conversation.InterestedUserId : conversation.FlatListingOwnerId;
 
             // Get other user's name
             var otherUserName = await _conversationRepository.GetUserDisplayNameAsync(otherUserId, cancellationToken);
@@ -43,8 +43,8 @@ public sealed class ChatService : IChatService
 
             var dto = new ConversationDto(
                 conversation.Id,
-                conversation.PropertyId,
-                conversation.Property.Title,
+                conversation.FlatListingId,
+                conversation.FlatListing.Title,
                 otherUserId,
                 otherUserName,
                 conversation.LastMessageContent,
@@ -86,36 +86,36 @@ public sealed class ChatService : IChatService
     }
 
     public async Task<ConversationDto> GetOrCreateConversationAsync(
-        Guid propertyId,
+        Guid flatListingId,
         CancellationToken cancellationToken)
     {
         var userId = _userContext.UserId ?? throw new UnauthorizedAccessException("User is not authenticated.");
 
-        // Get property info to determine owner
-        var propertyInfo = await _conversationRepository.GetPropertyInfoAsync(propertyId, cancellationToken);
+        // Get flat listing info to determine owner
+        var flatListingInfo = await _conversationRepository.GetFlatListingInfoAsync(flatListingId, cancellationToken);
 
-        if (propertyInfo == null)
+        if (flatListingInfo == null)
         {
-            throw new InvalidOperationException($"Property with ID {propertyId} not found.");
+            throw new InvalidOperationException($"Flat listing with ID {flatListingId} not found.");
         }
 
-        var (propertyOwnerId, propertyTitle) = propertyInfo.Value;
+        var (flatListingOwnerId, flatListingTitle) = flatListingInfo.Value;
 
         // Prevent user from messaging themselves
-        if (propertyOwnerId == userId)
+        if (flatListingOwnerId == userId)
         {
-            throw new InvalidOperationException("You cannot start a conversation with yourself for your own property.");
+            throw new InvalidOperationException("You cannot start a conversation with yourself for your own flat listing.");
         }
 
         // Current user is the interested user
         var conversation = await _conversationRepository.GetOrCreateAsync(
-            propertyId,
-            propertyOwnerId,
+            flatListingId,
+            flatListingOwnerId,
             userId,
             cancellationToken);
 
         // Get owner's name
-        var ownerName = await _conversationRepository.GetUserDisplayNameAsync(propertyOwnerId, cancellationToken);
+        var ownerName = await _conversationRepository.GetUserDisplayNameAsync(flatListingOwnerId, cancellationToken);
 
         // Count unread messages from owner
         var unreadCount = await _conversationRepository.CountUnreadMessagesAsync(
@@ -125,9 +125,9 @@ public sealed class ChatService : IChatService
 
         return new ConversationDto(
             conversation.Id,
-            propertyId,
-            propertyTitle,
-            propertyOwnerId,
+            flatListingId,
+            flatListingTitle,
+            flatListingOwnerId,
             ownerName,
             conversation.LastMessageContent,
             conversation.LastMessageAt,
@@ -186,7 +186,7 @@ public sealed class ChatService : IChatService
             throw new InvalidOperationException($"Conversation with ID {conversationId} not found.");
         }
 
-        if (conversation.PropertyOwnerId != userId && conversation.InterestedUserId != userId)
+        if (conversation.FlatListingOwnerId != userId && conversation.InterestedUserId != userId)
         {
             throw new UnauthorizedAccessException("You are not a participant in this conversation.");
         }

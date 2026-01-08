@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RoomMitra.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using RoomMitra.Infrastructure.Persistence;
 namespace RoomMitra.Infrastructure.Migrations
 {
     [DbContext(typeof(RoomMitraDbContext))]
-    partial class RoomMitraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260108173338_FixChatForeignKeyToFlatListings")]
+    partial class FixChatForeignKeyToFlatListings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

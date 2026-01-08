@@ -13,11 +13,11 @@ public interface IConversationRepository
     Task<Conversation?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Get or create a conversation for the specified property and interested user.
+    /// Get or create a conversation for the specified flat listing and interested user.
     /// </summary>
     Task<Conversation> GetOrCreateAsync(
-        Guid propertyId,
-        Guid propertyOwnerId,
+        Guid flatListingId,
+        Guid flatListingOwnerId,
         Guid interestedUserId,
         CancellationToken cancellationToken);
 
@@ -72,7 +72,7 @@ public interface IConversationRepository
     Task<int> CountUnreadMessagesAsync(Guid conversationId, Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Get property owner ID and title by property ID.
+    /// Get flat listing owner ID and title by flat listing ID.
     /// </summary>
-    Task<(Guid OwnerId, string Title)?> GetPropertyInfoAsync(Guid propertyId, CancellationToken cancellationToken);
+    Task<(Guid OwnerId, string Title)?> GetFlatListingInfoAsync(Guid flatListingId, CancellationToken cancellationToken);
 }

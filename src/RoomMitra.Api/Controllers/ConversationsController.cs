@@ -87,7 +87,7 @@ public sealed class ConversationsController : ControllerBase
     }
 
     /// <summary>
-    /// Get or create a conversation for a property.
+    /// Get or create a conversation for a flat listing.
     /// Current user is the interested user.
     /// </summary>
     [HttpPost]
@@ -99,14 +99,14 @@ public sealed class ConversationsController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Creating/getting conversation for property {PropertyId}", request.PropertyId);
+            _logger.LogInformation("Creating/getting conversation for flat listing {FlatListingId}", request.FlatListingId);
             
             var conversation = await _chatService.GetOrCreateConversationAsync(
-                request.PropertyId,
+                request.FlatListingId,
                 cancellationToken);
 
-            _logger.LogInformation("Successfully created/retrieved conversation {ConversationId} for property {PropertyId}", 
-                conversation.Id, request.PropertyId);
+            _logger.LogInformation("Successfully created/retrieved conversation {ConversationId} for flat listing {FlatListingId}", 
+                conversation.Id, request.FlatListingId);
 
             // Return 200 if existing, 201 if created
             // For simplicity, always return 200 (client doesn't need to distinguish)
@@ -114,20 +114,65 @@ public sealed class ConversationsController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            _logger.LogWarning(ex, "Unauthorized access when creating conversation for property {PropertyId}",
-                request.PropertyId);
+            _logger.LogWarning(ex, "Unauthorized access when creating conversation for flat listing {FlatListingId}",
+                request.FlatListingId);
             return Unauthorized(new { error = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Property {PropertyId} not found or invalid operation", request.PropertyId);
+            _logger.LogWarning(ex, "Flat listing {FlatListingId} not found or invalid operation", request.FlatListingId);
             return NotFound(new { error = ex.Message });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating conversation for property {PropertyId}", request.PropertyId);
+            _logger.LogError(ex, "Error creating conversation for flat listing {FlatListingId}", request.FlatListingId);
             return Problem(
                 title: "Failed to create conversation",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>
+    /// Send a message in a conversation.
+    /// Current user must be a participant in the conversation.
+    /// </summary>
+    [HttpPost("{conversationId:guid}/messages")]
+    [ProducesResponseType(typeof(MessageDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> SendMessage(
+        Guid conversationId,
+        [FromBody] SendMessageRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            _logger.LogInformation("Sending message in conversation {ConversationId}", conversationId);
+
+            var message = await _chatService.SendMessageAsync(
+                conversationId,
+                request.Content,
+                cancellationToken);
+
+            _logger.LogInformation("Message {MessageId} sent successfully in conversation {ConversationId}",
+                message.Id, conversationId);
+
+            return Ok(message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access to conversation {ConversationId}", conversationId);
+            return Unauthorized(new { error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Conversation {ConversationId} not found or invalid operation", conversationId);
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending message in conversation {ConversationId}", conversationId);
+            return Problem(
+                title: "Failed to send message",
                 detail: ex.Message,
                 statusCode: StatusCodes.Status500InternalServerError);
         }

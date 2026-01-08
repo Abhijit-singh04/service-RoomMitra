@@ -22,11 +22,11 @@ public interface IChatService
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Get or create a conversation for a property.
-    /// Current user is the interested user, property owner is determined from property.
+    /// Get or create a conversation for a flat listing.
+    /// Current user is the interested user, flat listing owner is determined from flat listing.
     /// </summary>
     Task<ConversationDto> GetOrCreateConversationAsync(
-        Guid propertyId,
+        Guid flatListingId,
         CancellationToken cancellationToken);
 
     /// <summary>
