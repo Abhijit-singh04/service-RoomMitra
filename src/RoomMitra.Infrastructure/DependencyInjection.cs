@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RoomMitra.Application.Abstractions.Auth;
+using RoomMitra.Application.Abstractions.Chat;
 using RoomMitra.Application.Abstractions.Notifications;
 using RoomMitra.Application.Abstractions.Repositories;
 using RoomMitra.Application.Abstractions.Storage;
@@ -55,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IFirebasePhoneAuthService, FirebasePhoneAuthService>();
 
         services.AddScoped<IFlatListingRepository, EfFlatListingRepository>();
+        services.AddScoped<IConversationRepository, EfConversationRepository>();
         services.AddScoped<IBlobStorage, AzureBlobStorage>();
 
         services.AddSingleton<IClock, SystemClock>();

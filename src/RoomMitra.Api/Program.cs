@@ -11,6 +11,7 @@ using RoomMitra.Application.Abstractions.Security;
 using RoomMitra.Infrastructure;
 using RoomMitra.Infrastructure.Options;
 using RoomMitra.Api.Security;
+using RoomMitra.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,9 @@ builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Add SignalR for real-time chat
+builder.Services.AddSignalR();
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -78,7 +82,6 @@ var azureAdB2C = builder.Configuration.GetSection(AzureAdB2COptions.SectionName)
 
 if (azureAdB2C is not null && !string.IsNullOrEmpty(azureAdB2C.TenantName))
 {
-    // Azure AD B2C JWT Bearer Authentication
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
@@ -132,6 +135,19 @@ if (azureAdB2C is not null && !string.IsNullOrEmpty(azureAdB2C.TenantName))
                     logger.LogWarning("Authentication challenge issued. Error: {Error}, Description: {Description}", 
                         context.Error, context.ErrorDescription);
                     return Task.CompletedTask;
+                },
+                // Allow SignalR to read JWT from query string for WebSocket connections
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/chat"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    
+                    return Task.CompletedTask;
                 }
             };
         });
@@ -165,8 +181,23 @@ else
                 TryAllIssuerSigningKeys = true // Try all available keys if kid doesn't match
             };
             
-            // Configure events for debugging
-            options.Events = new JwtBearerEvents();
+            // Configure events for debugging and SignalR support
+            options.Events = new JwtBearerEvents
+            {
+                // Allow SignalR to read JWT from query string for WebSocket connections
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/chat"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    
+                    return Task.CompletedTask;
+                }
+            };
         });
 }
 
@@ -195,7 +226,7 @@ builder.Services.AddCors(options =>
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials() // Required for cookies
+            .AllowCredentials() // Required for SignalR and cookies
     );
 });
 
@@ -206,11 +237,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
     
-    // In development, allow all origins for easier testing
+    // In development, allow localhost origins with credentials for SignalR
     app.UseCors(policy => policy
-        .AllowAnyOrigin()
+        .WithOrigins(
+            "http://localhost:3000",
+            "https://localhost:3000",
+            "http://localhost:3001",
+            "https://localhost:3001"
+        )
         .AllowAnyHeader()
-        .AllowAnyMethod());
+        .AllowAnyMethod()
+        .AllowCredentials());
 }
 else
 {
@@ -222,6 +259,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map SignalR hub for real-time chat
+app.MapHub<ChatHub>("/api/chat");
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {

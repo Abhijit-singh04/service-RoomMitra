@@ -23,6 +23,10 @@ public sealed class RoomMitraDbContext : IdentityDbContext<AppUser, IdentityRole
     public DbSet<UserPreferences> UserPreferences => Set<UserPreferences>();
     public DbSet<OtpRequest> OtpRequests => Set<OtpRequest>();
 
+    // Chat Tables
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<Message> Messages => Set<Message>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

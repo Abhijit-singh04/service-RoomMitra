@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using RoomMitra.Application.Abstractions.Chat;
 using RoomMitra.Application.Abstractions.Listings;
 using RoomMitra.Application.Services;
 
@@ -9,6 +10,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IListingsService, ListingsService>();
+        services.AddScoped<IChatService, ChatService>();
         return services;
     }
 }
