@@ -49,7 +49,8 @@ jobs:
 
       - name: Deploy (Zip Deploy)
         run: |
-          az webapp deployment source config-zip \
+          az webapp deploy \
             --resource-group "${{ secrets.AZURE_API_RESOURCE_GROUP }}" \
             --name "${{ secrets.AZURE_API_APP_NAME }}" \
-            --src "${{ runner.temp }}/roommitra-api.zip"
+            --type zip \
+            --src-path "${{ runner.temp }}/roommitra-api.zip"
