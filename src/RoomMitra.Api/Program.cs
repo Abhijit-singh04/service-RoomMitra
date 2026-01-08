@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.IdentityModel.Tokens;
@@ -36,6 +37,16 @@ if (builder.Environment.IsDevelopment())
 
 // Add environment variables to configuration
 builder.Configuration.AddEnvironmentVariables();
+
+// When running behind a reverse proxy (Azure App Service), respect X-Forwarded-* headers.
+// This ensures Request.IsHttps reflects the original client scheme, which is critical for Secure cookies.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // Azure front-ends are not in KnownNetworks/KnownProxies; clear to allow forwarding.
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -227,46 +238,59 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("frontend", policy =>
+    {
+        var configuredOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>()
+            ?.Where(o => !string.IsNullOrWhiteSpace(o))
+            .Select(o => o.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray() ?? Array.Empty<string>();
+
+        var localDevOrigins = new[]
+        {
+            "http://localhost:3000",
+            "https://localhost:3000",
+            "http://127.0.0.1:3000",
+            "https://127.0.0.1:3000",
+            "http://localhost:3001",  // Allow Swagger UI
+            "https://localhost:3001",
+            "http://127.0.0.1:3001",
+            "https://127.0.0.1:3001"
+        };
+
+        var allowedOrigins = builder.Environment.IsDevelopment()
+            ? configuredOrigins.Concat(localDevOrigins).Distinct(StringComparer.OrdinalIgnoreCase).ToArray()
+            : configuredOrigins;
+
+        if (allowedOrigins.Length == 0)
+        {
+            // Safe default: no cross-origin access.
+            // (In development we always include localhost; in production you should set Cors:AllowedOrigins.)
+            policy.SetIsOriginAllowed(_ => false);
+        }
+        else
+        {
+            policy.WithOrigins(allowedOrigins);
+        }
+
         policy
-            .WithOrigins(
-                "http://localhost:3000",
-                "https://localhost:3000",
-                "http://127.0.0.1:3000",
-                "https://127.0.0.1:3000",
-                "http://localhost:3001",  // Allow Swagger UI
-                "https://localhost:3001",
-                "http://127.0.0.1:3001",
-                "https://127.0.0.1:3001"
-            )
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials() // Required for cookies
-    );
+            .AllowCredentials(); // Required for cookies
+    });
 });
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    
-    // In development, allow specific origins with credentials (cookies)
-    // Note: AllowAnyOrigin() is incompatible with AllowCredentials()
-    app.UseCors(policy => policy
-        .WithOrigins(
-            "http://localhost:3000",
-            "https://localhost:3000",
-            "http://127.0.0.1:3000",
-            "https://127.0.0.1:3000",
-            "http://localhost:3001",
-            "https://localhost:3001",
-            "http://127.0.0.1:3001",
-            "https://127.0.0.1:3001"
-        )
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials());  // Required for HttpOnly cookies
+
+    app.UseCors("frontend");
 }
 else
 {

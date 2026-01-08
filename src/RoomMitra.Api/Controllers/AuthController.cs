@@ -66,13 +66,19 @@ public sealed class AuthController : ControllerBase
     
     private void SetAuthCookie(string token)
     {
+        var allowInsecureCookies = _configuration.GetValue<bool>("AllowInsecureCookies");
+        var allowCrossSiteCookies = _configuration.GetValue<bool>("AllowCrossSiteCookies");
+
+        // If we're behind a proxy and forwarding headers is enabled, Request.IsHttps should be accurate.
+        // As a safety net: in production, prefer Secure cookies.
+        var secureCookie = Request.IsHttps || !allowInsecureCookies;
+
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,                    // JavaScript cannot read this
-            // In local dev we usually run over HTTP; in prod we run HTTPS.
-            // Setting Secure based on the current request avoids silently dropping cookies in dev.
-            Secure = Request.IsHttps,
-            SameSite = SameSiteMode.Lax,        // CSRF protection, but allows redirect flows
+            Secure = secureCookie,
+            // If UI and API are on different origins, SameSite must be None (and Secure=true) for fetch/XHR.
+            SameSite = allowCrossSiteCookies ? SameSiteMode.None : SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(CookieExpirationDays),
             Path = "/",                         // Available for all paths
         };
@@ -82,11 +88,15 @@ public sealed class AuthController : ControllerBase
     
     private void ClearAuthCookie()
     {
+        var allowInsecureCookies = _configuration.GetValue<bool>("AllowInsecureCookies");
+        var allowCrossSiteCookies = _configuration.GetValue<bool>("AllowCrossSiteCookies");
+        var secureCookie = Request.IsHttps || !allowInsecureCookies;
+
         Response.Cookies.Delete(AccessTokenCookie, new CookieOptions
         {
             HttpOnly = true,
-            Secure = Request.IsHttps,
-            SameSite = SameSiteMode.Lax,
+            Secure = secureCookie,
+            SameSite = allowCrossSiteCookies ? SameSiteMode.None : SameSiteMode.Lax,
             Path = "/",
         });
     }
