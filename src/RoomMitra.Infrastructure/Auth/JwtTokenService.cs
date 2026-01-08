@@ -43,4 +43,43 @@ internal sealed class JwtTokenService : ITokenService
         handler.SetDefaultTimesOnTokenCreation = false; // Don't add default timestamps
         return handler.WriteToken(token);
     }
+    
+    public ClaimsPrincipal? ValidateToken(string token)
+    {
+        if (string.IsNullOrWhiteSpace(_options.SigningKey))
+        {
+            return null;
+        }
+        
+        try
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
+            var handler = new JwtSecurityTokenHandler();
+            
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = _options.Issuer,
+                ValidAudience = _options.Audience,
+                IssuerSigningKey = key,
+                ClockSkew = TimeSpan.FromMinutes(1) // Allow 1 minute clock skew
+            };
+            
+            var principal = handler.ValidateToken(token, validationParameters, out _);
+            return principal;
+        }
+        catch (SecurityTokenException)
+        {
+            // Token validation failed (expired, invalid signature, etc.)
+            return null;
+        }
+        catch (Exception)
+        {
+            // Any other exception means invalid token
+            return null;
+        }
+    }
 }

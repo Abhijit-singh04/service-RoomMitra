@@ -44,13 +44,17 @@ public sealed class AzureAdB2COptions
 
     /// <summary>
     /// Gets the constructed issuer URL.
+    /// For CIAM: https://{tenant}.ciamlogin.com/{tenantId}/v2.0/
+    /// For B2C: https://{tenant}.b2clogin.com/{tenantId}/v2.0/
     /// </summary>
     public string GetIssuer()
     {
         if (!string.IsNullOrEmpty(Issuer))
             return Issuer;
 
-        return $"https://{TenantName}.b2clogin.com/{TenantId}/v2.0/";
+        // If no policy is set, assume CIAM (ciamlogin). Otherwise, B2C (b2clogin).
+        var domain = string.IsNullOrEmpty(SignUpSignInPolicy) ? "ciamlogin.com" : "b2clogin.com";
+        return $"https://{TenantName}.{domain}/{TenantId}/v2.0/";
     }
 
     /// <summary>
@@ -61,6 +65,13 @@ public sealed class AzureAdB2COptions
         if (!string.IsNullOrEmpty(JwksUri))
             return JwksUri;
 
+        if (string.IsNullOrEmpty(SignUpSignInPolicy))
+        {
+            // CIAM format
+            return $"https://{TenantName}.ciamlogin.com/{TenantId}/discovery/v2.0/keys";
+        }
+
+        // B2C format
         return $"https://{TenantName}.b2clogin.com/{TenantName}.onmicrosoft.com/{SignUpSignInPolicy}/discovery/v2.0/keys";
     }
 
@@ -69,6 +80,13 @@ public sealed class AzureAdB2COptions
     /// </summary>
     public string GetMetadataAddress()
     {
+        if (string.IsNullOrEmpty(SignUpSignInPolicy))
+        {
+            // CIAM format
+            return $"https://{TenantName}.ciamlogin.com/{TenantId}/v2.0/.well-known/openid-configuration";
+        }
+
+        // B2C format
         return $"https://{TenantName}.b2clogin.com/{TenantName}.onmicrosoft.com/{SignUpSignInPolicy}/v2.0/.well-known/openid-configuration";
     }
 
@@ -77,6 +95,13 @@ public sealed class AzureAdB2COptions
     /// </summary>
     public string GetAuthority()
     {
+        if (string.IsNullOrEmpty(SignUpSignInPolicy))
+        {
+            // CIAM format
+            return $"https://{TenantName}.ciamlogin.com/{TenantId}";
+        }
+
+        // B2C format
         return $"https://{TenantName}.b2clogin.com/tfp/{TenantName}.onmicrosoft.com/{SignUpSignInPolicy}";
     }
 }
