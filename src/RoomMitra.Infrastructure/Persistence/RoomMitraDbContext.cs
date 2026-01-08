@@ -14,6 +14,9 @@ public sealed class RoomMitraDbContext : IdentityDbContext<AppUser, IdentityRole
 
     // Legacy - will be migrated to Property
     public DbSet<FlatListing> FlatListings => Set<FlatListing>();
+    
+    // Location/POI data
+    public DbSet<NearbyEssential> NearbyEssentials => Set<NearbyEssential>();
 
     // New Schema Tables
     public DbSet<Property> Properties => Set<Property>();

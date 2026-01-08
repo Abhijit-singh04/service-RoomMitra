@@ -3,12 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RoomMitra.Application.Abstractions.Auth;
+using RoomMitra.Application.Abstractions.Location;
 using RoomMitra.Application.Abstractions.Notifications;
 using RoomMitra.Application.Abstractions.Repositories;
 using RoomMitra.Application.Abstractions.Storage;
 using RoomMitra.Application.Abstractions.Time;
 using RoomMitra.Infrastructure.Auth;
 using RoomMitra.Infrastructure.Identity;
+using RoomMitra.Infrastructure.Location;
 using RoomMitra.Infrastructure.Notifications;
 using RoomMitra.Infrastructure.Options;
 using RoomMitra.Infrastructure.Persistence;
@@ -58,6 +60,12 @@ public static class DependencyInjection
         services.AddScoped<IBlobStorage, AzureBlobStorage>();
 
         services.AddSingleton<IClock, SystemClock>();
+        
+        // Location services - Azure Maps integration
+        services.Configure<AzureMapsOptions>(configuration.GetSection(AzureMapsOptions.SectionName));
+        services.AddSingleton<ILocationCache, InMemoryLocationCache>();
+        services.AddHttpClient<ILocationService, AzureMapsLocationService>();
+        services.AddScoped<IGeoSearchService, GeoSearchService>();
 
         return services;
     }

@@ -19,5 +19,7 @@ public sealed record FlatListingDetailDto(
     IReadOnlyList<string> Images,
     Guid PostedByUserId,
     ListingStatus Status,
-    DateTimeOffset CreatedAt
+    DateTimeOffset CreatedAt,
+    double? Latitude = null,
+    double? Longitude = null
 );
